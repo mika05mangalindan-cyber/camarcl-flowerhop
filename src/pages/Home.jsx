@@ -1,0 +1,166 @@
+// import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+// import axios from "axios";
+
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
+import axios from "axios";
+import { useCart } from "../context/CartContext";
+
+
+
+const API_URL = process.env.REACT_APP_API_URL;
+
+export default function Home() {
+  const [products, setProducts] = useState([]);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5500/products"); // replace with your backend endpoint
+        setProducts(response.data); // assume backend returns an array of products
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+  
+
+  return (
+    <div className="w-full">
+      {/* HERO / BANNER SECTION */}
+      <div
+        className="w-full h-[420px] bg-cover bg-center flex flex-col items-center justify-center text-center px-4"
+        style={{ backgroundImage: "url('/display.jpg')" }}
+      >
+        <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+          Camarcl Plants and Flower Shop
+        </h1>
+        <p className="text-white mt-3 text-lg drop-shadow-md">
+          Your trusted partner in growing nature at home.
+        </p>
+
+        <div className="mt-6 flex gap-4">
+          <Link
+            to="/shop"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700"
+          >
+            Shop Now
+          </Link>
+
+          <a
+            href="#highlights"
+            className="px-6 py-3 bg-white text-gray-800 rounded-lg shadow hover:bg-gray-100"
+          >
+            Learn More
+          </a>
+        </div>
+      </div>
+
+      {/* HIGHLIGHTS SECTION */}
+      <section id="highlights" className="py-16 bg-gray-50">
+        <h2 className="text-3xl font-semibold text-center mb-4">Why Choose Us?</h2>
+        <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+          Discover what makes Camarcl your trusted partner for plants, flowers, and nature-inspired joy.
+        </p>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <span className="text-4xl">🌿</span>
+            <h3 className="font-semibold text-lg mt-3">Healthy Plants</h3>
+            <p className="text-gray-600 text-sm mt-2">
+              Every plant is carefully nurtured and delivered fresh.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <span className="text-4xl">🚚</span>
+            <h3 className="font-semibold text-lg mt-3">Fast Delivery</h3>
+            <p className="text-gray-600 text-sm mt-2">
+              Safe and quick delivery to your doorstep, guaranteed.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <span className="text-4xl">💚</span>
+            <h3 className="font-semibold text-lg mt-3">Customer Care</h3>
+            <p className="text-gray-600 text-sm mt-2">
+              We're here to help you grow and care for your plants.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED PRODUCTS */}
+      <section className="py-16">
+        <h2 className="text-3xl font-semibold text-center mb-3">Featured Products</h2>
+        <p className="text-center text-gray-600 mb-10">
+          Explore our handpicked selection of beautiful plants and flowers.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto px-4">
+           {products.length > 0 ? (
+              products.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition flex flex-col"
+                >
+                  {/* Image */}
+                  {product.image_url ? (
+                    <div className="w-full aspect-w-1 aspect-h-1">
+                      <img
+                        src={product.image_url.startsWith("http") ? product.image_url : `${API_URL}${product.image_url}`}
+                        alt={product.name}
+                        className="w-full h-full object-cover rounded"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-w-1 aspect-h-1 bg-gray-100 flex items-center justify-center text-gray-400 text-sm italic rounded">
+                      No Img
+                    </div>
+                  )}
+
+      {/* Product info */}
+      <div className="flex-1 flex flex-col justify-between mt-3">
+        <div>
+          <h3 className="font-semibold text-lg">{product.name}</h3>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-green-700 font-medium">₱{product.price}</p>
+            <p className="text-gray-500 text-sm">Stock: {product.stock}</p>
+          </div>
+        </div>
+
+        {/* Add to Cart button always at the bottom */}
+        <button
+          onClick={() => addToCart(product)}
+          className="w-full mt-4 bg-green-600 text-white py-2 rounded hover:bg-green-700"
+        >
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  ))
+            ) : (
+              <p className="text-center text-gray-500 col-span-full">No products available</p>
+            )}
+
+
+        </div>
+
+
+        <div className="text-center mt-10">
+          <Link
+            to="/shop"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
+          >
+            View All Products
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
