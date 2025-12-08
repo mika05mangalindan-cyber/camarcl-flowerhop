@@ -51,7 +51,6 @@ function AppWrapper() {
           setUser(res.data.user);
           localStorage.setItem("user", JSON.stringify(res.data.user));
         } else {
-          // fallback: use localStorage if available
           const storedUser = localStorage.getItem("user");
           if (storedUser) setUser(JSON.parse(storedUser));
           else setUser(null);
@@ -62,10 +61,10 @@ function AppWrapper() {
         if (storedUser) setUser(JSON.parse(storedUser));
         else setUser(null);
       } finally {
+        // Only mark checking as finished after we have user from session or localStorage
         setCheckingUser(false);
       }
     };
-
     fetchSession();
   }, []);
 
@@ -74,6 +73,9 @@ function AppWrapper() {
     (location.pathname.startsWith("/dashboard") ||
       location.pathname.startsWith("/profile") ||
       location.pathname.startsWith("/account-settings"));
+
+  // ❌ Do NOT redirect while checking session
+  if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
   return (
     <>
@@ -94,7 +96,7 @@ function AppWrapper() {
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Admin / Protected Routes */}
+        {/* Protected / Admin */}
         <Route
           element={
             <ProtectedRoute user={user} checkingUser={checkingUser}>
@@ -103,10 +105,10 @@ function AppWrapper() {
           }
         >
           <Route path="/dashboard" element={<Dashboard user={user} />} />
-          <Route path="/dashboard/products" element={<Products />} />
-          <Route path="/dashboard/orders" element={<Orders />} />
-          <Route path="/dashboard/inventory" element={<Inventory />} />
-          <Route path="/dashboard/users" element={<Users />} />
+          <Route path="/dashboard/products" element={<Products user={user} />} />
+          <Route path="/dashboard/orders" element={<Orders user={user} />} />
+          <Route path="/dashboard/inventory" element={<Inventory user={user} />} />
+          <Route path="/dashboard/users" element={<Users user={user} />} />
           <Route path="/profile" element={<Profile user={user} />} />
           <Route path="/account-settings" element={<AccountSettings user={user} />} />
         </Route>
