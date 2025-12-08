@@ -13,7 +13,7 @@ import { createRequire } from "module";
 
 dotenv.config();
 
-// Fix for express-mysql-session in ESM
+// ---------------- FIX: ESM + express-mysql-session ----------------
 const require = createRequire(import.meta.url);
 const MySQLStore = require("express-mysql-session")(session);
 
