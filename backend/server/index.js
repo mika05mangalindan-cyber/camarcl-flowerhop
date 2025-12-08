@@ -412,7 +412,7 @@ app.get("/orders", async (req, res) => {
         oi.product_name,
         oi.quantity,
         oi.price AS item_price,
-        oi.total AS item_total,
+        oi.total AS item_total, -- still selectable
         p.image_url,
         IFNULL(p.category, p.name) AS category
       FROM orders o
@@ -427,47 +427,53 @@ app.get("/orders", async (req, res) => {
 });
 
 app.post("/orders", async (req, res) => {
-   console.log("Received order payload:", req.body);
+  console.log("Received order payload:", req.body);
   const { user_name, payment_mode, address, items } = req.body;
-  if (!user_name || !payment_mode || !address || !items?.length)  return res.status(400).json({ error: "Missing required fields or items" });
+  if (!user_name || !payment_mode || !address || !items?.length) 
+    return res.status(400).json({ error: "Missing required fields or items" });
 
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     const productIds = items.map(i => i.product_id);
-    const [products] = await conn.query("SELECT id, name, price, stock FROM products WHERE id IN (?)", [productIds]);
+    const [products] = await conn.query(
+      "SELECT id, name, price, stock FROM products WHERE id IN (?)",
+      [productIds]
+    );
 
     let orderTotal = 0;
     const orderItemsData = items.map(item => {
       const product = products.find(p => p.id === item.product_id);
       if (!product) throw new Error(`Product ${item.product_id} not found`);
       if (item.quantity > product.stock) throw new Error(`Not enough stock for ${product.name}`);
-      const total = Number(product.price) * Number(item.quantity);
-      orderTotal += total;
-      return { product_id: product.id, product_name: product.name, quantity: item.quantity, price: product.price, total };
+      orderTotal += Number(product.price) * Number(item.quantity);
+      return { product_id: product.id, product_name: product.name, quantity: item.quantity, price: product.price };
+      // removed 'total' because it's generated in DB
     });
 
-       const [orderResult] = await conn.query(
+    // Insert order with address
+    const [orderResult] = await conn.query(
       "INSERT INTO orders (user_name, total, payment_mode, status, address, created_at) VALUES (?, ?, ?, 'pending', ?, NOW())",
       [user_name, orderTotal, payment_mode, address]
     );
 
     const orderId = orderResult.insertId;
-    const orderItemsValues = orderItemsData.map(i => [orderId, i.product_id, i.product_name, i.quantity, i.price, i.total]);
+    const orderItemsValues = orderItemsData.map(i => [orderId, i.product_id, i.product_name, i.quantity, i.price]);
     await conn.query(
-      "INSERT INTO order_items (order_id, product_id, product_name, quantity, price, total) VALUES ?",
+      "INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES ?",
       [orderItemsValues]
     );
 
-     for (const item of orderItemsData) {
+    // Update product stock
+    for (const item of orderItemsData) {
       const product = products.find(p => p.id === item.product_id);
       await conn.query("UPDATE products SET stock=? WHERE id=?", [product.stock - item.quantity, product.id]);
       const [updated] = await conn.query("SELECT id, name, stock FROM products WHERE id=?", [product.id]);
       if (updated.length > 0) await lowStockNotification(updated[0]);
     }
 
- await conn.commit();
+    await conn.commit();
     res.json({ message: "Order placed!", order_id: orderId });
   } catch (err) {
     await conn.rollback();
@@ -477,7 +483,6 @@ app.post("/orders", async (req, res) => {
     conn.release();
   }
 });
-
 
 app.put("/orders/:id/status", async (req, res) => {
   const { id } = req.params;
@@ -500,6 +505,8 @@ app.put("/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 // ---------------- SALES BY CATEGORY ----------------
 app.get("/sales-by-category", async (req, res) => {
   try {
