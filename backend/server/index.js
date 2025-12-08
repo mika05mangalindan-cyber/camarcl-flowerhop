@@ -412,7 +412,7 @@ app.get("/orders", async (req, res) => {
         oi.product_name,
         oi.quantity,
         oi.price AS item_price,
-        oi.total AS item_total, -- still selectable
+        oi.total AS item_total,
         p.image_url,
         IFNULL(p.category, p.name) AS category
       FROM orders o
@@ -438,7 +438,7 @@ app.post("/orders", async (req, res) => {
 
     const productIds = items.map(i => i.product_id);
     const [products] = await conn.query(
-      "SELECT id, name, price, stock FROM products WHERE id IN (?)",
+      "SELECT id, name, price, stock FROM products WHERE id IN (?)", 
       [productIds]
     );
 
@@ -448,24 +448,37 @@ app.post("/orders", async (req, res) => {
       if (!product) throw new Error(`Product ${item.product_id} not found`);
       if (item.quantity > product.stock) throw new Error(`Not enough stock for ${product.name}`);
       orderTotal += Number(product.price) * Number(item.quantity);
-      return { product_id: product.id, product_name: product.name, quantity: item.quantity, price: product.price };
-      // removed 'total' because it's generated in DB
+      return {
+        product_id: product.id,
+        product_name: product.name,
+        quantity: item.quantity,
+        price: product.price
+      };
     });
 
-    // Insert order with address
+    // Insert into orders table
     const [orderResult] = await conn.query(
       "INSERT INTO orders (user_name, total, payment_mode, status, address, created_at) VALUES (?, ?, ?, 'pending', ?, NOW())",
       [user_name, orderTotal, payment_mode, address]
     );
 
     const orderId = orderResult.insertId;
-    const orderItemsValues = orderItemsData.map(i => [orderId, i.product_id, i.product_name, i.quantity, i.price]);
+
+    // Insert into order_items WITHOUT total column
+    const orderItemsValues = orderItemsData.map(i => [
+      orderId,
+      i.product_id,
+      i.product_name,
+      i.quantity,
+      i.price
+    ]);
+
     await conn.query(
       "INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES ?",
       [orderItemsValues]
     );
 
-    // Update product stock
+    // Update product stock & check for low stock notifications
     for (const item of orderItemsData) {
       const product = products.find(p => p.id === item.product_id);
       await conn.query("UPDATE products SET stock=? WHERE id=?", [product.stock - item.quantity, product.id]);
@@ -505,6 +518,7 @@ app.put("/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 // ---------------- SALES BY CATEGORY ----------------
