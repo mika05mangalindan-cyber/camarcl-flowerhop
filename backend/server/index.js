@@ -427,6 +427,7 @@ app.get("/orders", async (req, res) => {
 });
 
 app.post("/orders", async (req, res) => {
+   console.log("Received order payload:", req.body);
   const { user_name, payment_mode, address, items } = req.body;
   if (!user_name || !payment_mode || !address || !items?.length)  return res.status(400).json({ error: "Missing required fields or items" });
 
