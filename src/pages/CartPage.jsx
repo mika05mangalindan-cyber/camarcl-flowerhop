@@ -8,29 +8,38 @@ const API_URL = process.env.REACT_APP_API_URL;
 export default function CartPage() {
   const { cartItems, removeFromCart, total, clearCart } = useCart();
 
+  // Ensure each cart item has quantity (default to 1) before sending to checkout
+  const sanitizedCartItems = cartItems.map(item => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity || 1,
+    imageUrl: item.imageUrl || "/placeholder-plant.png"
+  }));
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
 
-      {cartItems.length === 0 ? (
+      {sanitizedCartItems.length === 0 ? (
         <p>Your cart is empty.</p>
       ) : (
         <>
-          {cartItems.map((item) => (
+          {sanitizedCartItems.map((item) => (
             <div
               key={item.id}
               className="flex items-center justify-between bg-white p-4 rounded-lg shadow mb-3"
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={item.imageUrl || "/placeholder-plant.png"}
+                  src={item.imageUrl}
                   alt={item.name}
                   className="w-16 h-16 object-cover rounded-md"
                 />
                 <div>
                   <h2 className="font-semibold">{item.name}</h2>
                   <p>
-                    ₱{item.price} x {item.quantity || 1}
+                    ₱{item.price} x {item.quantity}
                   </p>
                 </div>
               </div>
@@ -58,6 +67,7 @@ export default function CartPage() {
 
             <Link
               to="/checkout"
+              state={{ cartItems: sanitizedCartItems, total }} // pass sanitized items to checkout
               className="inline-block bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition-all"
             >
               Proceed to Checkout

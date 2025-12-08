@@ -1,12 +1,17 @@
 // src/pages/Checkout.jsx
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const Checkout = () => {
-  const { cartItems, clearCart, cartTotal } = useCart();
+  const location = useLocation();
+  const { clearCart } = useCart();
+  const [cartItems] = useState(location.state?.cartItems || []); // sanitized items from CartPage
+  const [cartTotal] = useState(location.state?.total || 0);
+
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -14,6 +19,7 @@ const Checkout = () => {
     phone: "",
     paymentMethod: "Cash", // default option
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -27,14 +33,14 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      // Build order payload for backend
+      // Build payload for backend
       const payload = {
         user_name: formData.name,
         address: formData.address,
         payment_mode: formData.paymentMethod,
         items: cartItems.map(item => ({
           product_id: item.id,
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
         })),
       };
 
@@ -138,14 +144,14 @@ const Checkout = () => {
                 {cartItems.map((item, index) => (
                   <li key={index} className="flex justify-between py-2">
                     <span>{item.name}</span>
-                    <span>₱{item.price} x {item.quantity}</span>
+                    <span>₱{item.price} x {item.quantity || 1}</span>
                   </li>
                 ))}
               </ul>
             )}
             <div className="mt-4 border-t pt-4 flex justify-between font-bold text-green-700">
               <span>Total:</span>
-              <span>₱{cartTotal}</span>
+              <span>₱{cartTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
