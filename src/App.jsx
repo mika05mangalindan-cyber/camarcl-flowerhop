@@ -43,7 +43,7 @@ function AppWrapper() {
   // Fetch user on app mount to persist login
   useEffect(() => {
     axios
-      .get(`${API_URL}/session`)
+      .get(`${process.env.REACT_APP_API_URL}/session`, { withCredentials: true })
       .then((res) => setUser(res.data.user || null))
       .catch(() => setUser(null))
       .finally(() => setCheckingUser(false));
