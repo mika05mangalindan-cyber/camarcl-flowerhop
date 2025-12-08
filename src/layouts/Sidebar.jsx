@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom"; // ⭐ ADDED useNavigate
 import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -59,25 +59,30 @@ export default function Sidebar() {
   const socketRef = useRef(null);
   const audioRef = useRef(null);
 
+  const navigate = useNavigate(); // ⭐ ADDED
+
   // Fetch user session from backend
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await axios.get(`${API_URL}/session`, { withCredentials: true });
+
         if (res.data.loggedIn) {
           setUser(res.data.user);
           localStorage.setItem("user", JSON.stringify(res.data.user));
         } else {
           setUser(null);
           localStorage.removeItem("user");
+          navigate("/login", { replace: true }); // ⭐ ADDED REDIRECT
         }
       } catch (err) {
         console.error("Failed to fetch user session:", err);
+        navigate("/login", { replace: true }); // ⭐ FAIL-SAFE REDIRECT
       }
     };
 
     fetchUser();
-  }, []);
+  }, [navigate]); // ⭐ ADDED navigate dependency
 
   // Load audio notification
   useEffect(() => {
@@ -132,13 +137,8 @@ export default function Sidebar() {
 
     fetchNotifications();
 
-    return () => {
-      mounted = false;
-      if (socketRef.current && socketRef.current.disconnect) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-    };
+    return () =>
+      socketRef.current?.disconnect?.();
   }, [fetchNotifications, playSound]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.isRead).length, [notifications]);
@@ -164,7 +164,7 @@ export default function Sidebar() {
   const markAllAsRead = useCallback(async () => {
     try {
       const unread = notifications.filter((n) => !n.isRead).map((n) => n.id);
-      if (unread.length === 0) return;
+      if (!unread.length) return;
 
       const BATCH = 10;
       for (let i = 0; i < unread.length; i += BATCH) {
@@ -182,10 +182,12 @@ export default function Sidebar() {
     if (!showNotifications) fetchNotifications();
   }, [showNotifications, fetchNotifications]);
 
-  const linkClass = useCallback(({ isActive }) =>
-    `block px-4 py-2 rounded-lg transition-all duration-200 ${
-      isActive ? "bg-white text-green-700 font-semibold shadow" : "text-gray-200 hover:bg-green-600 hover:text-white hover:shadow-green-400/30"
-    }`, []
+  const linkClass = useCallback(
+    ({ isActive }) =>
+      `block px-4 py-2 rounded-lg transition-all duration-200 ${
+        isActive ? "bg-white text-green-700 font-semibold shadow" : "text-gray-200 hover:bg-green-600 hover:text-white hover:shadow-green-400/30"
+      }`,
+    []
   );
 
   return (
@@ -216,12 +218,7 @@ export default function Sidebar() {
               { to: "/dashboard/users", label: "Users" },
             ].map((link) => (
               <li key={link.to}>
-                <NavLink
-                  to={link.to}
-                  end
-                  className={linkClass}
-                  onClick={() => setIsOpen(false)}
-                >
+                <NavLink to={link.to} end className={linkClass} onClick={() => setIsOpen(false)}>
                   {link.label}
                 </NavLink>
               </li>
@@ -252,7 +249,9 @@ export default function Sidebar() {
                 <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md z-50 border">
                   <div className="flex justify-between items-center px-3 py-2 border-b">
                     <span className="font-semibold text-gray-700 text-sm">Notifications</span>
-                    <button onClick={markAllAsRead} className="text-blue-500 text-xs focus:outline-none hover:underline">Mark all as read</button>
+                    <button onClick={markAllAsRead} className="text-blue-500 text-xs focus:outline-none hover:underline">
+                      Mark all as read
+                    </button>
                   </div>
                   {notifications.length === 0 ? (
                     <p className="p-2 text-gray-500 text-sm">No notifications</p>
