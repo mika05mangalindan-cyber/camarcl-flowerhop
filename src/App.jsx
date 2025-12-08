@@ -39,7 +39,7 @@ function AppWrapper() {
   const [user, setUser] = useState(null);
   const [checkingUser, setCheckingUser] = useState(true);
 
-  // Restore session once
+  // Restore session on page load
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -47,13 +47,23 @@ function AppWrapper() {
 
         if (res.data.loggedIn) {
           setUser(res.data.user);
+          // also update localStorage for Profile page fallback
+          localStorage.setItem("user", JSON.stringify(res.data.user));
         } else {
-          setUser(null);
+          // fallback: try localStorage if backend says not logged in
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            setUser(null);
+          }
         }
-
       } catch (err) {
         console.error("Session error:", err);
-        setUser(null);
+        // fallback to localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
+        else setUser(null);
       } finally {
         setCheckingUser(false);
       }
@@ -64,12 +74,11 @@ function AppWrapper() {
 
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
-
   const isAdminRoute =
     user?.role === "admin" &&
     (location.pathname.startsWith("/dashboard") ||
-     location.pathname.startsWith("/profile") ||
-     location.pathname.startsWith("/account-settings"));
+      location.pathname.startsWith("/profile") ||
+      location.pathname.startsWith("/account-settings"));
 
   return (
     <>
@@ -90,7 +99,7 @@ function AppWrapper() {
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* ADMIN ROUTES WITH SIDEBAR */}
+        {/* Admin routes */}
         <Route
           element={
             <ProtectedRoute user={user}>
@@ -105,7 +114,6 @@ function AppWrapper() {
           <Route path="/dashboard/users" element={<Users />} />
           <Route path="/profile" element={<Profile user={user} />} />
           <Route path="/account-settings" element={<AccountSettings user={user} />} />
-
         </Route>
 
         {/* Catch-all */}
@@ -116,6 +124,7 @@ function AppWrapper() {
     </>
   );
 }
+
 
 // MAIN APP
 export default function App() {
