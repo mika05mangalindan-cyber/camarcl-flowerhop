@@ -64,8 +64,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: isProd,                    // true in production (HTTPS), false for dev
-    sameSite: isProd ? "none" : "lax", // none for cross-site in prod, lax for dev
+    secure: true,                 // true in production (HTTPS), false for dev
+    sameSite: "none", // none for cross-site in prod, lax for dev
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
@@ -571,7 +571,13 @@ app.post("/logout", (req, res) => {
       console.error("Logout error:", err);
       return res.status(500).json({ error: "Logout failed" });
     }
-    res.clearCookie("connect.sid", { path: "/", httpOnly: true, secure: isProd, sameSite: isProd ? "none" : "lax" });
+      res.clearCookie("session_cookie_name", {
+      path: "/",
+      httpOnly: true,
+      secure: isProd,           // true in production, false in dev
+      sameSite: isProd ? "none" : "lax",
+    });
+
     res.json({ message: "Logged out successfully" });
   });
 });
