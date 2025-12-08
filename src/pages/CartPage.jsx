@@ -25,32 +25,47 @@ export default function CartPage() {
         <p>Your cart is empty.</p>
       ) : (
         <>
-          {sanitizedCartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between bg-white p-4 rounded-lg shadow mb-3"
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={item.image_url.startsWith("http") ? item.image_url : `${API_URL}${item.image_url}`}
-                  alt={item.product_name}
-                  className="w-16 h-16 object-cover rounded-md"
-                />
-                <div>
-                  <h2 className="font-semibold">{item.name}</h2>
-                  <p>
-                    ₱{item.price} x {item.quantity}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => removeFromCart(item.id)}
-                className="text-red-600 hover:text-red-800"
+          {cartItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between bg-white p-4 rounded-lg shadow mb-3"
               >
-                Remove
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-3">
+                  {item.image_url ? (
+                    <img
+                      src={
+                        item.image_url.startsWith("http")
+                          ? item.image_url
+                          : `${API_URL}${item.image_url}`
+                      }
+                      alt={item.product_name || item.name}
+                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <img
+                      src="/placeholder-plant.png"
+                      alt={item.product_name || item.name}
+                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                    />
+                  )}
+                  <div>
+                    <h2 className="font-semibold">{item.product_name || item.name}</h2>
+                    <p>
+                      ₱{item.price} x {item.quantity || 1}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+
 
           <div className="flex justify-between mt-4 text-lg font-semibold">
             <span>Total:</span>
