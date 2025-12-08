@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
-
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import Home from "./pages/Home.jsx";
@@ -16,14 +15,12 @@ import Profile from "./pages/Profile.jsx";
 import AccountSettings from "./pages/AccountSettings.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-
 import Sidebar from "./layouts/Sidebar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Products from "./pages/Products.jsx";
 import Orders from "./pages/Orders.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import Users from "./pages/Users.jsx";
-
 import { CartProvider } from "./context/CartContext";
 
 axios.defaults.withCredentials = true;
@@ -67,9 +64,7 @@ function AppWrapper() {
 
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
-  // 🤬 THIS WAS YOUR MAIN PROBLEM — FIXED:
-  // ALL ADMIN ROUTES (dashboard, products, orders, inventory, users, profile, account-settings)
-  // MUST USE SIDEBAR LAYOUT
+
   const isAdminRoute =
     user?.role === "admin" &&
     (location.pathname.startsWith("/dashboard") ||
@@ -108,10 +103,9 @@ function AppWrapper() {
           <Route path="/dashboard/orders" element={<Orders />} />
           <Route path="/dashboard/inventory" element={<Inventory />} />
           <Route path="/dashboard/users" element={<Users />} />
+          <Route path="/profile" element={<Profile user={user} />} />
+          <Route path="/account-settings" element={<AccountSettings user={user} />} />
 
-          {/* PROFILE + SETTINGS NOW INSIDE SIDEBAR (FIXED) */}
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/account-settings" element={<AccountSettings />} />
         </Route>
 
         {/* Catch-all */}

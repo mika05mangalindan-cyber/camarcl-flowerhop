@@ -7,7 +7,7 @@ const FiSave = lazy(() => import("react-icons/fi").then(mod => ({ default: mod.F
 const FiX = lazy(() => import("react-icons/fi").then(mod => ({ default: mod.FiX })));
 const FiEdit2 = lazy(() => import("react-icons/fi").then(mod => ({ default: mod.FiEdit2 })));
 
-export default function Profile() {
+export default function Profile({ user }) {
   const [profile, setProfile] = useState({
     id: null,
     name: "",
@@ -18,43 +18,18 @@ export default function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user info from backend session
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        // Fetch session info
-        const sessionRes = await axios.get(`${API_URL}/session`, { withCredentials: true });
-        if (!sessionRes.data.loggedIn) {
-          alert("Not logged in");
-          setLoading(false);
-          return;
-        }
-
-        const userId = sessionRes.data.user.id;
-
-        // Fetch full user details
-        const res = await axios.get(`${API_URL}/users/${userId}`, { withCredentials: true });
-
-        setProfile({
-          id: res.data.id,
-          name: res.data.name || "",
-          email: res.data.email || "",
-          contact_number: res.data.contact_number || "",
-          role: res.data.role || "",
-        });
-
-        // Update localStorage
-        localStorage.setItem("user", JSON.stringify(res.data));
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        alert("Failed to fetch profile information.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
+    if (user) {
+      setProfile({
+        id: user.id,
+        name: user.name || "",
+        email: user.email || "",
+        contact_number: user.contact_number || "",
+        role: user.role || "",
+      });
+    }
+    setLoading(false);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,13 +42,11 @@ export default function Profile() {
         name: profile.name,
         email: profile.email,
         contact_number: profile.contact_number,
-        role: profile.role, // preserve role
+        role: profile.role,
       };
 
       await axios.put(`${API_URL}/users/${profile.id}`, updatedData, { withCredentials: true });
-
-      localStorage.setItem("user", JSON.stringify({ ...profile }));
-
+      localStorage.setItem("user", JSON.stringify(profile));
       setEditMode(false);
       alert("Profile updated successfully!");
     } catch (err) {
