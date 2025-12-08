@@ -44,6 +44,9 @@ const Checkout = () => {
         })),
       };
 
+
+    console.log("Order payload:", payload); // ← add this line
+
       const res = await axios.post(`${API_URL}/orders`, payload, { withCredentials: true });
 
       if (res.data?.order_id) {
