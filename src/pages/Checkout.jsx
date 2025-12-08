@@ -1,6 +1,7 @@
 // src/pages/Checkout.jsx
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
+import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -11,6 +12,7 @@ const Checkout = () => {
     address: "",
     email: "",
     phone: "",
+    paymentMethod: "Cash", // default option
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -21,22 +23,33 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!cartItems.length) return alert("Your cart is empty!");
     setIsSubmitting(true);
 
     try {
-      // For now, we just log the order to the console
-      console.log("Order submitted:", {
-        ...formData,
-        items: cartItems,
-        total: cartTotal,
-        createdAt: new Date().toISOString(),
-      });
+      // Build order payload for backend
+      const payload = {
+        user_name: formData.name,
+        address: formData.address,
+        payment_mode: formData.paymentMethod,
+        items: cartItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+        })),
+      };
 
-      // Clear cart and show success message
-      clearCart();
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error saving order:", error);
+      const res = await axios.post(`${API_URL}/orders`, payload, { withCredentials: true });
+
+      if (res.data?.order_id) {
+        clearCart();
+        setSuccess(true);
+        console.log("Order placed successfully:", res.data.order_id);
+      } else {
+        alert("Failed to place order. Try again.");
+      }
+    } catch (err) {
+      console.error("Order submission error:", err);
+      alert("Failed to place order. Check console for details.");
     }
 
     setIsSubmitting(false);
@@ -95,6 +108,17 @@ const Checkout = () => {
               required
               className="w-full border rounded-lg px-3 py-2"
             />
+            <select
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+              required
+              className="w-full border rounded-lg px-3 py-2"
+            >
+              <option value="Cash">Cash</option>
+              <option value="E_Payment">E_Payment</option>
+              <option value="Credit/Debit_Card">Credit/Debit Card</option>
+            </select>
             <button
               type="submit"
               disabled={isSubmitting}
@@ -114,7 +138,7 @@ const Checkout = () => {
                 {cartItems.map((item, index) => (
                   <li key={index} className="flex justify-between py-2">
                     <span>{item.name}</span>
-                    <span>₱{item.price}</span>
+                    <span>₱{item.price} x {item.quantity}</span>
                   </li>
                 ))}
               </ul>

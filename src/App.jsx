@@ -74,7 +74,6 @@ function AppWrapper() {
       location.pathname.startsWith("/profile") ||
       location.pathname.startsWith("/account-settings"));
 
-  // ❌ Do NOT redirect while checking session
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
   return (
