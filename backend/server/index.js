@@ -441,7 +441,7 @@ app.post("/orders", async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    // Fetch products to check stock and price
+    // Fetch product info
     const productIds = items.map(i => i.product_id);
     const [products] = await conn.query(
       "SELECT id, name, price, stock FROM products WHERE id IN (?)",
@@ -450,12 +450,14 @@ app.post("/orders", async (req, res) => {
 
     let orderTotal = 0;
 
-    // Prepare order items WITHOUT total (MySQL generates it)
+    // Prepare order items (do NOT include total)
     const orderItemsData = items.map(item => {
       const product = products.find(p => p.id === item.product_id);
       if (!product) throw new Error(`Product ${item.product_id} not found`);
       if (item.quantity > product.stock) throw new Error(`Not enough stock for ${product.name}`);
+
       orderTotal += Number(product.price) * Number(item.quantity);
+
       return {
         product_id: product.id,
         product_name: product.name,
@@ -469,9 +471,10 @@ app.post("/orders", async (req, res) => {
       "INSERT INTO orders (user_name, total, payment_mode, status, address, created_at) VALUES (?, ?, ?, 'pending', ?, NOW())",
       [user_name, orderTotal, payment_mode, address]
     );
+
     const orderId = orderResult.insertId;
 
-    // Insert order items WITHOUT total
+    // Insert order_items WITHOUT total
     const orderItemsValues = orderItemsData.map(i => [
       orderId,
       i.product_id,
@@ -479,12 +482,13 @@ app.post("/orders", async (req, res) => {
       i.quantity,
       i.price
     ]);
+
     await conn.query(
       "INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES ?",
       [orderItemsValues]
     );
 
-    // Update product stock & check for low stock
+    // Update product stock & send low stock notifications
     for (const item of orderItemsData) {
       const product = products.find(p => p.id === item.product_id);
       await conn.query("UPDATE products SET stock=? WHERE id=?", [product.stock - item.quantity, product.id]);
@@ -527,6 +531,7 @@ app.put("/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
