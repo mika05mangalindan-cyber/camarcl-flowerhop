@@ -35,27 +35,44 @@ const ProtectedRoute = ({ children, user, role }) => {
   return children;
 };
 
+// ------------------ APP WRAPPER ------------------
 function AppWrapper() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingUser, setCheckingUser] = useState(true);
 
-  // Fetch user on app mount to persist login
+  // Persist session on mount
   useEffect(() => {
-    axios
-      .get(`${API_URL}/session`, { withCredentials: true })
-      .then((res) => setUser(res.data.user || null))
-      .catch(() => setUser(null))
-      .finally(() => setCheckingUser(false));
+    const fetchSession = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/session`, { withCredentials: true });
+        if (res.data.loggedIn) {
+          setUser(res.data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching session:", err);
+        setUser(null);
+      } finally {
+        setCheckingUser(false);
+      }
+    };
+
+    fetchSession();
   }, []);
 
+  // Show loading while checking session
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
   // Determine layout
-  // Include /profile and /account-settings in admin layout
-  const isAdminLayout = location.pathname.startsWith("/dashboard") ||
-                        location.pathname === "/profile" ||
-                        location.pathname === "/account-settings";
+  // Admin layout: dashboard routes OR admin user on profile/account-settings
+  const isAdminLayout =
+    (user?.role === "admin" && (
+      location.pathname.startsWith("/dashboard") ||
+      location.pathname === "/profile" ||
+      location.pathname === "/account-settings"
+    ));
 
   return (
     <>
@@ -84,14 +101,13 @@ function AppWrapper() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard/Admin */}
           <Route path="/dashboard" element={<Dashboard user={user} />} />
           <Route path="/dashboard/products" element={<Products />} />
           <Route path="/dashboard/orders" element={<Orders />} />
           <Route path="/dashboard/inventory" element={<Inventory />} />
           <Route path="/dashboard/users" element={<Users />} />
 
-          {/* Profile / Account Settings under admin layout */}
+          {/* Admin profile/settings */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/account-settings" element={<AccountSettings />} />
         </Route>
@@ -105,7 +121,7 @@ function AppWrapper() {
   );
 }
 
-
+// ------------------ MAIN APP ------------------
 export default function App() {
   return (
     <BrowserRouter>
