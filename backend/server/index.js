@@ -13,6 +13,20 @@ import MySQLStore from "express-mysql-session";
 
 dotenv.config();
 
+// ---------------- SESSION STORE ----------------
+// Define sessionStore BEFORE using session middleware
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  clearExpired: true,
+  checkExpirationInterval: 900000, // 15 min
+  expiration: 86400000 // 1 day
+});
+
+
 // Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -40,18 +54,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// ---------------- SESSION STORE ----------------
-// Define sessionStore BEFORE using session middleware
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  clearExpired: true,
-  checkExpirationInterval: 900000, // 15 min
-  expiration: 86400000 // 1 day
-});
 
 // Session middleware (updated to use store)
 app.use(session({
