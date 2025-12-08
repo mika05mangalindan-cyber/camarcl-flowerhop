@@ -16,6 +16,7 @@ import Profile from "./pages/Profile.jsx";
 import AccountSettings from "./pages/AccountSettings.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+
 import Sidebar from "./layouts/Sidebar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Products from "./pages/Products.jsx";
@@ -28,31 +29,33 @@ import { CartProvider } from "./context/CartContext";
 axios.defaults.withCredentials = true;
 const API_URL = process.env.REACT_APP_API_URL;
 
-// ProtectedRoute wrapper
+// ProtectedRoute
 const ProtectedRoute = ({ children, user, role }) => {
   if (!user) return <Navigate to="/login" replace />;
   if (role && user.role.toLowerCase() !== role.toLowerCase()) return <Navigate to="/" replace />;
   return children;
 };
 
-// ------------------ APP WRAPPER ------------------
-  function AppWrapper() {
+// APP WRAPPER
+function AppWrapper() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingUser, setCheckingUser] = useState(true);
 
-  // Persist session on mount
+  // Restore session once
   useEffect(() => {
     const fetchSession = async () => {
       try {
         const res = await axios.get(`${API_URL}/session`, { withCredentials: true });
+
         if (res.data.loggedIn) {
           setUser(res.data.user);
         } else {
           setUser(null);
         }
+
       } catch (err) {
-        console.error("Error fetching session:", err);
+        console.error("Session error:", err);
         setUser(null);
       } finally {
         setCheckingUser(false);
@@ -62,24 +65,23 @@ const ProtectedRoute = ({ children, user, role }) => {
     fetchSession();
   }, []);
 
-  // Show loading while checking session
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
-  // Determine layout
-  // Admin layout: dashboard routes OR admin user on profile/account-settings
-  const isAdminLayout =
-    (user?.role === "admin" && (
-      location.pathname.startsWith("/dashboard") ||
-      location.pathname === "/profile" ||
-      location.pathname === "/account-settings"
-    ));
+  // 🤬 THIS WAS YOUR MAIN PROBLEM — FIXED:
+  // ALL ADMIN ROUTES (dashboard, products, orders, inventory, users, profile, account-settings)
+  // MUST USE SIDEBAR LAYOUT
+  const isAdminRoute =
+    user?.role === "admin" &&
+    (location.pathname.startsWith("/dashboard") ||
+     location.pathname.startsWith("/profile") ||
+     location.pathname.startsWith("/account-settings"));
 
   return (
     <>
-      {!isAdminLayout && <Navbar />}
+      {!isAdminRoute && <Navbar />}
 
       <Routes>
-        {/* Public pages */}
+        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<CartPage />} />
@@ -89,11 +91,11 @@ const ProtectedRoute = ({ children, user, role }) => {
         <Route path="/policies" element={<Policies />} />
         <Route path="/faq" element={<FAQ />} />
 
-        {/* Auth pages */}
+        {/* Auth */}
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected / Admin layout */}
+        {/* ADMIN ROUTES WITH SIDEBAR */}
         <Route
           element={
             <ProtectedRoute user={user}>
@@ -107,21 +109,21 @@ const ProtectedRoute = ({ children, user, role }) => {
           <Route path="/dashboard/inventory" element={<Inventory />} />
           <Route path="/dashboard/users" element={<Users />} />
 
-          {/* Admin profile/settings */}
+          {/* PROFILE + SETTINGS NOW INSIDE SIDEBAR (FIXED) */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/account-settings" element={<AccountSettings />} />
         </Route>
 
-        {/* Fallback */}
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {!isAdminLayout && <Footer />}
+      {!isAdminRoute && <Footer />}
     </>
   );
 }
 
-// ------------------ MAIN APP ------------------
+// MAIN APP
 export default function App() {
   return (
     <BrowserRouter>
