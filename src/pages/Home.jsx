@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-       const response = await axios.get(`${API_URL}/products`);
+       const response = await axios.get(`${API_URL}/products`, { withCredentials: true });
         setProducts(response.data); // assume backend returns an array of products
       } catch (error) {
         console.error("Error fetching products:", error);
