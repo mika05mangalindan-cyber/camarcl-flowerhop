@@ -406,6 +406,7 @@ app.get("/orders", async (req, res) => {
         o.payment_mode,
         o.status,
         o.created_at,
+        o.address,
         oi.id AS order_item_id,
         oi.product_id,
         oi.product_name,
@@ -426,8 +427,8 @@ app.get("/orders", async (req, res) => {
 });
 
 app.post("/orders", async (req, res) => {
-  const { user_name, payment_mode, items } = req.body;
-  if (!user_name || !payment_mode || !items?.length) return res.status(400).json({ error: "Missing required fields or items" });
+  const { user_name, payment_mode, address, items } = req.body;
+  if (!user_name || !payment_mode || !address || !items?.length)  return res.status(400).json({ error: "Missing required fields or items" });
 
   const conn = await db.getConnection();
   try {
@@ -446,31 +447,36 @@ app.post("/orders", async (req, res) => {
       return { product_id: product.id, product_name: product.name, quantity: item.quantity, price: product.price, total };
     });
 
-    const [orderResult] = await conn.query(
-      "INSERT INTO orders (user_name, total, payment_mode, status, created_at) VALUES (?, ?, ?, 'pending', NOW())",
-      [user_name, orderTotal, payment_mode]
+       const [orderResult] = await conn.query(
+      "INSERT INTO orders (user_name, total, payment_mode, status, address, created_at) VALUES (?, ?, ?, 'pending', ?, NOW())",
+      [user_name, orderTotal, payment_mode, address]
     );
 
     const orderId = orderResult.insertId;
     const orderItemsValues = orderItemsData.map(i => [orderId, i.product_id, i.product_name, i.quantity, i.price, i.total]);
-    await conn.query("INSERT INTO order_items (order_id, product_id, product_name, quantity, price, total) VALUES ?", [orderItemsValues]);
+    await conn.query(
+      "INSERT INTO order_items (order_id, product_id, product_name, quantity, price, total) VALUES ?",
+      [orderItemsValues]
+    );
 
-    for (const item of orderItemsData) {
+     for (const item of orderItemsData) {
       const product = products.find(p => p.id === item.product_id);
       await conn.query("UPDATE products SET stock=? WHERE id=?", [product.stock - item.quantity, product.id]);
       const [updated] = await conn.query("SELECT id, name, stock FROM products WHERE id=?", [product.id]);
       if (updated.length > 0) await lowStockNotification(updated[0]);
     }
 
-    await conn.commit();
+ await conn.commit();
     res.json({ message: "Order placed!", order_id: orderId });
   } catch (err) {
     await conn.rollback();
+    console.error("Order creation error:", err);
     res.status(500).json({ error: err.message });
   } finally {
     conn.release();
   }
 });
+
 
 app.put("/orders/:id/status", async (req, res) => {
   const { id } = req.params;
@@ -493,7 +499,6 @@ app.put("/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ---------------- SALES BY CATEGORY ----------------
 app.get("/sales-by-category", async (req, res) => {
   try {
