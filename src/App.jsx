@@ -46,40 +46,27 @@ function AppWrapper() {
     const fetchSession = async () => {
       try {
         const res = await axios.get(`${API_URL}/session`, { withCredentials: true });
-        if (res.data.loggedIn) {
-          setUser(res.data.user);
-        } else {
-          setUser(null);
-        }
+        if (res.data.loggedIn) setUser(res.data.user);
       } catch (err) {
         console.error("Error fetching session:", err);
-        setUser(null);
       } finally {
         setCheckingUser(false);
       }
     };
-
     fetchSession();
   }, []);
 
-  // Show loading while checking session
   if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
-  // Determine layout
-  // Admin layout: dashboard routes OR admin user on profile/account-settings
-  const isAdminLayout =
-    (user?.role === "admin" && (
-      location.pathname.startsWith("/dashboard") ||
-      location.pathname === "/profile" ||
-      location.pathname === "/account-settings"
-    ));
+  // Admin layout: show sidebar only for /dashboard routes
+  const isAdminLayout = location.pathname.startsWith("/dashboard");
 
   return (
     <>
       {!isAdminLayout && <Navbar />}
 
       <Routes>
-        {/* Public pages */}
+        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<CartPage />} />
@@ -89,14 +76,32 @@ function AppWrapper() {
         <Route path="/policies" element={<Policies />} />
         <Route path="/faq" element={<FAQ />} />
 
-        {/* Auth pages */}
+        {/* Auth */}
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected / Admin layout */}
+        {/* Protected user pages */}
         <Route
+          path="/profile"
           element={
             <ProtectedRoute user={user}>
+              <Profile user={user} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account-settings"
+          element={
+            <ProtectedRoute user={user}>
+              <AccountSettings user={user} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin dashboard routes */}
+        <Route
+          element={
+            <ProtectedRoute user={user} role="admin">
               <Sidebar />
             </ProtectedRoute>
           }
@@ -106,10 +111,6 @@ function AppWrapper() {
           <Route path="/dashboard/orders" element={<Orders />} />
           <Route path="/dashboard/inventory" element={<Inventory />} />
           <Route path="/dashboard/users" element={<Users />} />
-
-          {/* Admin profile/settings */}
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/account-settings" element={<AccountSettings />} />
         </Route>
 
         {/* Fallback */}
