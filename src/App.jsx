@@ -26,20 +26,22 @@ import { CartProvider } from "./context/CartContext";
 axios.defaults.withCredentials = true;
 const API_URL = process.env.REACT_APP_API_URL;
 
-// ProtectedRoute
-const ProtectedRoute = ({ children, user, role }) => {
+// --- Fixed ProtectedRoute ---
+const ProtectedRoute = ({ children, user, role, checkingUser }) => {
+  if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
+
   if (!user) return <Navigate to="/login" replace />;
   if (role && user.role.toLowerCase() !== role.toLowerCase()) return <Navigate to="/" replace />;
+
   return children;
 };
 
-// APP WRAPPER
+// --- App Wrapper ---
 function AppWrapper() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingUser, setCheckingUser] = useState(true);
 
-  // Restore session on page load
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -47,20 +49,15 @@ function AppWrapper() {
 
         if (res.data.loggedIn) {
           setUser(res.data.user);
-          // also update localStorage for Profile page fallback
           localStorage.setItem("user", JSON.stringify(res.data.user));
         } else {
-          // fallback: try localStorage if backend says not logged in
+          // fallback: use localStorage if available
           const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            setUser(null);
-          }
+          if (storedUser) setUser(JSON.parse(storedUser));
+          else setUser(null);
         }
       } catch (err) {
         console.error("Session error:", err);
-        // fallback to localStorage
         const storedUser = localStorage.getItem("user");
         if (storedUser) setUser(JSON.parse(storedUser));
         else setUser(null);
@@ -71,8 +68,6 @@ function AppWrapper() {
 
     fetchSession();
   }, []);
-
-  if (checkingUser) return <p className="p-4 text-gray-600">Checking session...</p>;
 
   const isAdminRoute =
     user?.role === "admin" &&
@@ -99,10 +94,10 @@ function AppWrapper() {
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Admin routes */}
+        {/* Admin / Protected Routes */}
         <Route
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute user={user} checkingUser={checkingUser}>
               <Sidebar />
             </ProtectedRoute>
           }
@@ -125,8 +120,7 @@ function AppWrapper() {
   );
 }
 
-
-// MAIN APP
+// --- Main App ---
 export default function App() {
   return (
     <BrowserRouter>
