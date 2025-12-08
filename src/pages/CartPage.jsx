@@ -32,8 +32,8 @@ export default function CartPage() {
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={item.imageUrl}
-                  alt={item.name}
+                  src={item.image_url.startsWith("http") ? item.image_url : `${API_URL}${item.image_url}`}
+                  alt={item.product_name}
                   className="w-16 h-16 object-cover rounded-md"
                 />
                 <div>
