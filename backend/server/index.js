@@ -64,12 +64,13 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,                 // true in production (HTTPS), false for dev
-    sameSite: "none", // none for cross-site in prod, lax for dev
+    secure: isProd,                 // false for localhost
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
+    sameSite: isProd ? "none" : "lax", 
+    maxAge: 1000 * 60 * 60 * 24
   }
 }));
+
 
 // ---------------- MYSQL POOL ----------------
 export const db = mysql.createPool({
