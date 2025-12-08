@@ -9,6 +9,7 @@ import { Server } from "socket.io";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 import session from "express-session";
+import MySQLStore from "express-mysql-session";
 
 dotenv.config();
 
@@ -38,9 +39,25 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
+
+// ---------------- SESSION STORE ----------------
+// Define sessionStore BEFORE using session middleware
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  clearExpired: true,
+  checkExpirationInterval: 900000, // 15 min
+  expiration: 86400000 // 1 day
+});
+
+// Session middleware (updated to use store)
 app.use(session({
+  key: "session_cookie_name",
   secret: process.env.SESSION_SECRET || "superSecretKey123",
+  store: sessionStore, // <-- use the MySQLStore
   resave: false,
   saveUninitialized: false,
   cookie: {
