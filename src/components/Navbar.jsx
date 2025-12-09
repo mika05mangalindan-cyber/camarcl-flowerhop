@@ -1,53 +1,50 @@
-// src/components/Navbar.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Search, ShoppingCart, ChevronDown } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { API_URL } from '../config';
 
 const Navbar = ({ setUser }) => {
   const [userData, setUserData] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { cartItems } = useCart();
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Only fetch session if on admin routes
+  // Fetch session on every page load (not just admin)
   useEffect(() => {
-    if (location.pathname.startsWith("/admin")) {
-      const fetchSession = async () => {
-        try {
-          const res = await fetch("http://localhost:5500/dashboard", {
-            credentials: "include",
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setUserData(data.user);
-            setUser?.(data.user);
-          } else {
-            setUserData(null);
-            setUser?.(null);
-          }
-        } catch (err) {
-          console.error(err);
+    const fetchSession = async () => {
+      try {
+        const res = await fetch(`${API_URL}/session`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (data.loggedIn) {
+          setUserData(data.user);
+          setUser?.(data.user);
+        } else {
           setUserData(null);
           setUser?.(null);
         }
-      };
-      fetchSession();
-    }
-  }, [location.pathname, setUser]);
+      } catch (err) {
+        console.error("Session fetch error:", err);
+        setUserData(null);
+        setUser?.(null);
+      }
+    };
+    fetchSession();
+  }, [setUser]);
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5500/logout", {
+      await fetch(`${API_URL}/logout`, {
         method: "POST",
         credentials: "include",
       });
       setUserData(null);
       setUser?.(null);
-      navigate("/"); // redirect to home after logout
+      navigate("/"); // redirect home after logout
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -105,12 +102,12 @@ const Navbar = ({ setUser }) => {
               </button>
             </>
           ) : (
-            <div className="relative">
+            <div className="relative flex items-center gap-4">
+              <span className="text-green-700 font-medium">Hi, {userData.name}</span>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-1 font-medium text-green-700 hover:text-green-800"
               >
-                {userData.name}
                 <ChevronDown size={18} />
               </button>
 
