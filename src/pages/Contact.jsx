@@ -1,7 +1,7 @@
 // src/pages/Contact.jsx
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 
 
 // const API_URL = process.env.REACT_APP_API_URL;

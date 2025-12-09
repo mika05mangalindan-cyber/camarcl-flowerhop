@@ -1,7 +1,7 @@
 // import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 // import axios from "axios";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import axios from "axios";

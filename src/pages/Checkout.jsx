@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 // const API_URL = process.env.REACT_APP_API_URL;
 
 const Checkout = () => {

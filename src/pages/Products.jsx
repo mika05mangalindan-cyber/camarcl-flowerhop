@@ -4,7 +4,7 @@ import debounce from "lodash.debounce";
 import ProductForm from "../components/ProductForm";
 import ProductTable from "../components/ProductTable";
 import ProductCard from "../components/ProductCard";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 
 // const API_URL = process.env.REACT_APP_API_URL;
 const PRODUCTS_API = `${API_URL}/products`;

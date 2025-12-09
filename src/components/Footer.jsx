@@ -3,7 +3,7 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationDot, faEnvelope, faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 
 
 // const API_URL = process.env.REACT_APP_API_URL;

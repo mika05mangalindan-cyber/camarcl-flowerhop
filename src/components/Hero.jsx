@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { API_URL } from './config';
+import { API_URL } from '../config'
 
 // const API_URL = process.env.REACT_APP_API_URL;
 
