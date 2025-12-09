@@ -1,6 +1,7 @@
 import React from "react";
+import { API_URL } from './config';
 
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
 
 const About = () => {
   return (

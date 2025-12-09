@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-
-const API_URL = process.env.REACT_APP_API_URL;
+import { API_URL } from './config';
+// const API_URL = process.env.REACT_APP_API_URL;
 
 const Checkout = () => {
   const location = useLocation();

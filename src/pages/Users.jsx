@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { API_URL } from './config';
 
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
 const USERS_API = `${API_URL}/users`;
 
 const IconUser = ({ className = "w-5 h-5" }) => (

@@ -4,8 +4,9 @@ import debounce from "lodash.debounce";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { API_URL } from './config';
 
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
 const ORDERS_API = `${API_URL}/orders`;
 
 const getStatusColor = (status) => {

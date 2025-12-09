@@ -1,6 +1,7 @@
 // import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 // import axios from "axios";
+import { API_URL } from './config';
 
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import axios from "axios";
@@ -8,7 +9,7 @@ import { useCart } from "../context/CartContext";
 
 
 
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Home() {
   const [products, setProducts] = useState([]);
