@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Search, ShoppingCart, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { API_URL } from '../config';
 
 const Navbar = ({ setUser }) => {
   const [userData, setUserData] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { cartItems } = useCart();
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Fetch session on every page load (not just admin)
+  // Fetch session on page load
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -20,7 +19,7 @@ const Navbar = ({ setUser }) => {
           credentials: "include",
         });
         const data = await res.json();
-        if (data.loggedIn) {
+        if (data.loggedIn && data.user.role === "customer") {
           setUserData(data.user);
           setUser?.(data.user);
         } else {
@@ -92,53 +91,24 @@ const Navbar = ({ setUser }) => {
           </Link>
 
           {/* AUTH AREA */}
-          {!userData ? (
-            <>
+          {userData ? (
+            <div className="flex items-center gap-4">
+              <span className="text-green-700 font-medium">Hi, {userData.name}</span>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
               <button onClick={() => navigate("/register")} className="hover:text-green-600">
                 Register
               </button>
               <button onClick={() => navigate("/login")} className="hover:text-green-600">
                 Login
               </button>
-            </>
-          ) : (
-            <div className="relative flex items-center gap-4">
-              <span className="text-green-700 font-medium">Hi, {userData.name}</span>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-1 font-medium text-green-700 hover:text-green-800"
-              >
-                <ChevronDown size={18} />
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg rounded-md border p-2">
-                  <Link
-                    to="/profile"
-                    className="block px-3 py-2 hover:bg-gray-100 rounded-md"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    My Profile
-                  </Link>
-
-                  {userData.role === "admin" && (
-                    <Link
-                      to="/admin"
-                      className="block px-3 py-2 hover:bg-gray-100 text-red-600 font-semibold rounded-md"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Admin Dashboard
-                    </Link>
-                  )}
-
-                  <button
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600 rounded-md"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>
