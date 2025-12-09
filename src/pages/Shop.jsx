@@ -4,7 +4,6 @@
 import { Link } from "react-router-dom";
 // import axios from "axios";
 import { API_URL } from '../config'
-
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import axios from "axios";
 import { useCart } from "../context/CartContext"; // your cart context
@@ -17,23 +16,22 @@ export default function Shop() {
   const [error, setError] = useState("");
   const { addToCart } = useCart();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("http://localhost:5500/products");
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        setProducts(data); // assuming your API returns { products: [...] }
-      } catch (err) {
-        console.error(err);
-        setError("Error loading products. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/products`, { withCredentials: true });
+      setProducts(res.data);
+    } catch (err) {
+      console.error(err);
+      setError("Error loading products. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProducts();
-  }, []);
+  fetchProducts();
+}, []);
+
 
   if (loading) {
     return (
