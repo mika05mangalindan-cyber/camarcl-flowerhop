@@ -95,24 +95,25 @@ export default function Login({ onLogin }) {
               />
             </div>
 
-            <div className="relative">
-              <label className="block text-gray-700 font-medium mb-2">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:outline-none transition"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="********"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-9 text-gray-500 text-sm font-medium"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
+           <div className="relative">
+            <label className="block text-gray-700 font-medium mb-2">Password</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:outline-none transition"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              required
+              autoComplete="current-password" 
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-9 text-gray-500 text-sm font-medium"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
             <button
               type="submit"
