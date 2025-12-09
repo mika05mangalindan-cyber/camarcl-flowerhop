@@ -22,11 +22,12 @@ import Products from "./pages/Products.jsx";
 import Orders from "./pages/Orders.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import Users from "./pages/Users.jsx";
+import { API_URL } from '../config'
 
 import { CartProvider } from "./context/CartContext";
 
 axios.defaults.withCredentials = true;
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
 
 // --- Protected Route ---
 const ProtectedRoute = ({ children, user, role, checkingUser }) => {
