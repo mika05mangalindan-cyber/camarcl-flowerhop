@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from '../config'
 
-// const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true;
 
 export default function Register() {
@@ -13,7 +12,6 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("Customer");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +25,7 @@ export default function Register() {
         email,
         contactNumber,
         password,
-        role,
+        role: "Customer" // force role to Customer
       });
 
       if (res.data.success) {
@@ -128,20 +126,6 @@ export default function Register() {
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
-            </div>
-
-            {/* User Role */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">User Role</label>
-              <select
-                className="w-full border border-gray-300 rounded-lg px-4 py-3
-                           focus:ring-2 focus:ring-green-500 focus:outline-none transition"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="Customer">Customer</option>
-                <option value="Admin">Admin</option>
-              </select>
             </div>
 
             {/* Submit Button */}
